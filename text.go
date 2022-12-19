@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -26,6 +27,9 @@ var monthMap = map[string]string{
 // TODO: write test
 func splitText(text string) []string {
 	loc := header.FindStringIndex(text)
+	if loc == nil {
+		return nil
+	}
 	text = text[loc[0]:]
 	summaries := header.Split(text, -1)[1:]
 	reformatted := []string{}
@@ -97,7 +101,7 @@ func convertDate(date string) string {
 }
 
 func clean(billType string) string {
-	noSpace := strings.TrimSpace(billType)
-	noPunct := strings.Trim(noSpace, ".,;:'\"?")
-	return strings.ToLower(noPunct)
+	punct := regexp.MustCompile(`[ .,;:'\"?]`)
+	cleaned := punct.ReplaceAllString(billType, "")
+	return strings.ToLower(cleaned)
 }

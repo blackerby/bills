@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/gen2brain/go-fitz"
 )
@@ -29,19 +31,30 @@ func main() {
 }
 
 func run(inputFile string, pageNumber int, out io.Writer) error {
-
 	doc, err := fitz.New(inputFile)
 	if err != nil {
 		return err
 	}
 	defer doc.Close()
 
-	text, err := doc.Text(pageNumber)
+	// Page numbers are indexed from 0, so subtract 1 from page number entered by user.
+	text, err := doc.Text(pageNumber - 1)
 	if err != nil {
 		return err
 	}
 
 	headers := headers(text)
+	if headers == nil {
+		outFile := pageOutFileName(inputFile, pageNumber)
+		fmt.Printf("Header pattern not found, writing full page to %s\n", outFile)
+		f, err := os.Create(outFile)
+		if err != nil {
+			panic(err)
+		}
+		f.WriteString(text)
+		f.Close()
+		return nil
+	}
 	summaries := summaries(text)
 	records := getMetadata(headers)
 	fileNameData := getFilenameData(records[1:])
@@ -55,4 +68,11 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 
 	writeSummaries(os.Stdout, inputFile, summaries, fileNameData)
 	return nil
+}
+
+func pageOutFileName(inputFile string, pageNumber int) string {
+	base := filepath.Base(inputFile)
+	ext := filepath.Ext(inputFile)
+	newBase := strings.TrimSuffix(base, ext)
+	return fmt.Sprintf("%s_%03d.txt", newBase, pageNumber)
 }
