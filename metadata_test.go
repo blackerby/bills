@@ -36,10 +36,23 @@ func TestGetMetadata(t *testing.T) {
 func TestMdOutFileName(t *testing.T) {
 	t.Parallel()
 
-	want := "74_2_003.csv"
-	got := mdOutFileName(inputFile, 3)
+	testCases := []struct {
+		name string
+		page int
+		want string
+	}{
+		{"One digit page", 3, "74_2_003.csv"},
+		{"Two digit page", 12, "74_2_012.csv"},
+		{"Three digit page", 121, "74_2_121.csv"},
+	}
 
-	if want != got {
-		t.Errorf("expected %q, got %q", want, got)
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			want := tc.want
+			got := mdOutFileName(inputFile, tc.page)
+			if want != got {
+				t.Errorf("expected %q, got %q", want, got)
+			}
+		})
 	}
 }
