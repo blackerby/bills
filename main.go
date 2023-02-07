@@ -61,7 +61,8 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 
 	// ----------------------------------------------
 	// What needs to happen here to make this concurrent
-	summaries := summaries(text, headers)
+	summariesCh := make(chan string)
+	go summaries(text, headers, summariesCh)
 	records := getMetadata(headers)
 	fileNameData := getFilenameData(records[1:])
 
@@ -84,7 +85,8 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 		wg.Add(1)
 		go func(record []string, i int) {
 			defer wg.Done()
-			writeSummary(os.Stdout, inputFile, record, summaries[i])
+			summary := <-summariesCh
+			writeSummary(os.Stdout, inputFile, record, summary)
 		}(record, i)
 	}
 

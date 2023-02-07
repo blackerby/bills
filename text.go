@@ -44,16 +44,14 @@ func headers(text string) []string {
 }
 
 // TODO: write test
-func summaries(text string, headers []string) []string {
+func summaries(text string, headers []string, summariesCh chan string) {
 	summaries := splitText(text)
 	if len(headers) != len(summaries) {
 		panic("must be same number of headers and summaries")
 	}
-	out := []string{}
 	for i := range headers {
-		out = append(out, headers[i]+summaries[i])
+		summariesCh <- (headers[i] + summaries[i])
 	}
-	return out
 }
 
 func writeSummary(out io.Writer, inputFile string, record []string, summary string) {
