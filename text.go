@@ -44,8 +44,7 @@ func headers(text string) []string {
 }
 
 // TODO: write test
-func summaries(text string) []string {
-	headers := headers(text)
+func summaries(text string, headers []string) []string {
 	summaries := splitText(text)
 	if len(headers) != len(summaries) {
 		panic("must be same number of headers and summaries")
