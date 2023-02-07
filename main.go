@@ -34,8 +34,6 @@ func main() {
 }
 
 func run(inputFile string, pageNumber int, out io.Writer) error {
-	var wg sync.WaitGroup
-
 	doc, err := fitz.New(inputFile)
 	if err != nil {
 		return err
@@ -60,6 +58,9 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 		f.Close()
 		return nil
 	}
+
+	// ----------------------------------------------
+	// What needs to happen here to make this concurrent
 	summaries := summaries(text, headers)
 	records := getMetadata(headers)
 	fileNameData := getFilenameData(records[1:])
@@ -69,6 +70,9 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 	if err != nil {
 		return err
 	}
+	// ----------------------------------------------
+
+	var wg sync.WaitGroup
 
 	wg.Add(1)
 	go func() {
@@ -76,11 +80,13 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 		writeMetadata(records, f)
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		writeSummaries(os.Stdout, inputFile, summaries, fileNameData)
-	}()
+	for i, record := range fileNameData {
+		wg.Add(1)
+		go func(record []string, i int) {
+			defer wg.Done()
+			writeSummary(os.Stdout, inputFile, record, summaries[i])
+		}(record, i)
+	}
 
 	wg.Wait()
 

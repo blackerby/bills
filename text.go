@@ -56,21 +56,18 @@ func summaries(text string, headers []string) []string {
 	return out
 }
 
-// TODO: write test
-func writeSummaries(out io.Writer, inputFile string, summaries []string, fileNameData [][]string) {
-	for i, record := range fileNameData {
-		billType := record[0]
-		billNumber := record[1]
-		date := record[2]
-		outFileName := sOutFileName(inputFile, billType, billNumber, date)
-		f, err := os.Create(outFileName)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Fprintln(out, f.Name())
-		f.WriteString(summaries[i])
-		f.Close()
+func writeSummary(out io.Writer, inputFile string, record []string, summary string) {
+	billType := record[0]
+	billNumber := record[1]
+	date := record[2]
+	outFileName := sOutFileName(inputFile, billType, billNumber, date)
+	f, err := os.Create(outFileName)
+	if err != nil {
+		panic(err)
 	}
+	fmt.Fprintln(out, f.Name())
+	f.WriteString(summary)
+	f.Close()
 }
 
 func sOutFileName(inputFile, billType, billNumber, date string) string {
