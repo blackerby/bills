@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/gen2brain/go-fitz"
 )
@@ -33,6 +34,8 @@ func main() {
 }
 
 func run(inputFile string, pageNumber int, out io.Writer) error {
+	var wg sync.WaitGroup
+
 	doc, err := fitz.New(inputFile)
 	if err != nil {
 		return err
@@ -66,9 +69,21 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 	if err != nil {
 		return err
 	}
-	writeMetadata(records, f)
 
-	writeSummaries(os.Stdout, inputFile, summaries, fileNameData)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		writeMetadata(records, f)
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		writeSummaries(os.Stdout, inputFile, summaries, fileNameData)
+	}()
+
+	wg.Wait()
+
 	return nil
 }
 
