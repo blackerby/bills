@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/gen2brain/go-fitz"
 )
@@ -59,38 +58,20 @@ func run(inputFile string, pageNumber int, out io.Writer) error {
 		return nil
 	}
 
-	// ----------------------------------------------
-	// What needs to happen here to make this concurrent
-	summariesCh := make(chan string)
-	go summaries(text, headers, summariesCh)
 	records := getMetadata(headers)
-	fileNameData := getFilenameData(records[1:])
-
 	mdOutFile := mdOutFileName(inputFile, pageNumber)
 	f, err := os.Create(mdOutFile)
 	if err != nil {
 		return err
 	}
-	// ----------------------------------------------
+	writeMetadata(records, f)
 
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		writeMetadata(records, f)
-	}()
-
-	for i, record := range fileNameData {
-		wg.Add(1)
-		go func(record []string, i int) {
-			defer wg.Done()
-			summary := <-summariesCh
-			writeSummary(os.Stdout, inputFile, record, summary)
-		}(record, i)
+	fileNameData := getFilenameData(records[1:])
+	summariesCh := make(chan string)
+	go summaries(text, headers, summariesCh)
+	for _, record := range fileNameData {
+		writeSummary(os.Stdout, inputFile, record, <-summariesCh)
 	}
-
-	wg.Wait()
 
 	return nil
 }
