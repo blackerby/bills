@@ -15,8 +15,6 @@ import (
 var header = regexp.MustCompile(`(?m)(((?:S|H)\.? ?(?:R\.?)? (?:J\.? Res\. ?)?)(\w{1,5})\.? ((?:M(?:rs?|essrs)\.) .+?)(?:[;,:])? (\w{1,9} \d{1,2}[.,] \d{4})[.—]? ?\n?(?:\((['0-9a-zA-Z ]+)\))?(?:\.|.+\.|:|.+:)?)`)
 
 func main() {
-	// var wg sync.WaitGroup
-
 	inputFile := flag.String("file", "", "PDF file to extract text from")
 	pageNumber := flag.Int("page", 1, "Page number of PDF file to extract text from")
 	flag.Parse()
